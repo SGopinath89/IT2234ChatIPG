@@ -1,13 +1,15 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "./UserContext";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
 
   const { setUsername: setLoggedInUsername, setId: setUserId, setLoggedIn } = useContext(UserContext);
+  const navigate = useNavigate();
 
   async function handleLogin(ev) {
     ev.preventDefault();
@@ -21,10 +23,13 @@ export default function Login() {
         { withCredentials: true }
       );
 
-      setLoggedInUsername(response.data.username);
+      setLoggedInUsername(response.data.Username);
       setUserId(response.data.id);
+      setLoggedIn(true);
       console.log("Login successful:", response.data);
+      navigate("/Chat");
     } catch (error) {
+      setError("Invalid username or password");
       console.error("Login error:", error);
     }
   }
@@ -35,6 +40,7 @@ export default function Login() {
       className="max-w-md mx-auto mt-10 p-4 border rounded-lg shadow-lg"
     >
       <h1 className="text-2xl font-bold mb-4">Login</h1>
+      {error && <p className="text-red-500">{error}</p>}
       <input
         type="text"
         placeholder="Username"
@@ -56,7 +62,7 @@ export default function Login() {
         Login
       </button>
       <div className="text-center mt-2">
-        Don't have an account <Link to="/register">Register</Link>
+        Don't have an account? <Link to="/register">Register</Link>
       </div>
     </form>
   );

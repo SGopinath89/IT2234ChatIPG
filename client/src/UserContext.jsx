@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { createContext, useEffect, useState } from 'react';
+import axios from "axios";
+import { createContext, useEffect, useState } from "react";
 
 const UserContext = createContext({});
 
@@ -11,22 +11,24 @@ export function UserContextProvider({ children }) {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get('/profile', { withCredentials: true });
+        const response = await axios.get("/profile", { withCredentials: true });
         const { id, username } = response.data;
         setUsername(username);
         setId(id);
-        setLoggedIn(true); // Set loggedIn state to true after successful profile fetch
+        setLoggedIn(true);
       } catch (error) {
-        console.error('Profile fetch error:', error);
-        setLoggedIn(false); // Set loggedIn state to false if profile fetch fails
+        console.error("Profile fetch error:", error);
+        setLoggedIn(false);
       }
     };
 
     fetchProfile();
-  }, []); // Empty dependency array to run the effect only once on mount
+  }, []);
 
   return (
-    <UserContext.Provider value={{ username, setUsername, id, setId, loggedIn, setLoggedIn }}>
+    <UserContext.Provider
+      value={{ username, setUsername, id, setId, loggedIn, setLoggedIn }}
+    >
       {children}
     </UserContext.Provider>
   );

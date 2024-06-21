@@ -7,6 +7,7 @@ require("dotenv").config();
 const cors = require("cors");
 const User = require("./models/User");
 const Session = require("./models/Session");
+const ws = require("ws");
 
 const mongoUrl = process.env.MONGO_URL;
 const jwtSecret = process.env.JWT_SECRET;
@@ -43,19 +44,22 @@ const isLoggedIn = async (req, res, next) => {
   const token = req.cookies?.token;
   if (token) {
     try {
-      const session = await Session.findOne({ token }).populate('userId', 'Username');
+      const session = await Session.findOne({ token }).populate(
+        "userId",
+        "Username"
+      );
       if (session) {
         req.user = session.userId; // Set the user data in the request object
         next(); // Call the next middleware or route handler
       } else {
-        res.status(401).json('Invalid token');
+        res.status(401).json("Invalid token");
       }
     } catch (error) {
-      console.error('Database query error:', error);
-      res.status(500).json('Internal server error');
+      console.error("Database query error:", error);
+      res.status(500).json("Internal server error");
     }
   } else {
-    res.status(401).json('No token provided');
+    res.status(401).json("No token provided");
   }
 };
 
@@ -63,25 +67,31 @@ app.get("/test", (req, res) => {
   res.json("test ok");
 });
 
-app.get('/profile', isLoggedIn, (req, res) => {
+app.get("/profile", isLoggedIn, (req, res) => {
   res.json({ userId: req.user._id, username: req.user.Username });
 });
 
-app.get('/profile', async (req, res) => {
+app.get("/profile", async (req, res) => {
   const token = req.cookies?.token;
   if (token) {
     try {
-      const session = await Session.findOne({ token }).populate('userId', 'Username'); // Populate the user data
+      const session = await Session.findOne({ token }).populate(
+        "userId",
+        "Username"
+      ); // Populate the user data
       if (!session) {
-        return res.status(401).json('Invalid token');
+        return res.status(401).json("Invalid token");
       }
-      res.json({ userId: session.userId._id, username: session.userId.Username });
+      res.json({
+        userId: session.userId._id,
+        username: session.userId.Username,
+      });
     } catch (error) {
-      console.error('Database query error:', error);
-      res.status(500).json('Internal server error');
+      console.error("Database query error:", error);
+      res.status(500).json("Internal server error");
     }
   } else {
-    res.status(401).json('No token provided');
+    res.status(401).json("No token provided");
   }
 });
 
@@ -168,6 +178,31 @@ app.post("/logout", (req, res) => {
   res.json({ message: "Logged out" });
 });
 
-app.listen(4040, () => {
-  console.log("Server started on port 4040");
+const server = app.listen(4040);
+
+const wss = new ws.WebSocketServer({ server });
+wss.on("connection", (connection, req) => {
+  const cookies = req.headers.cookie;
+  if (cookies) {
+    const tokenCookieString = cookies
+      .split(";")
+      .find((str) => str.startsWith("token="));
+    if (tokenCookieString) {
+      const token = tokenCookieString.split("=")[1];
+      if (token) {
+        jwt.verify(token, jwtSecret, {},(err,userData)=>{
+          if(err) throw err;
+          const {userId, Username} = userData;
+          connection.userId = userId;
+          connection.Username = Username;
+        });
+      }
+    }
+  }
+
+  [...wss.clients].forEach(client =>{
+    client.send(JSON.stringify({
+      online: [...wss.clients].map(c=>({userId:c.userId, Username:c.Username})),
+    }));
+  });
 });
