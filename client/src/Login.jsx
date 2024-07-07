@@ -33,7 +33,6 @@ export default function Login() {
       console.error("Login error:", error);
     }
   }
-
   return (
     <form
       onSubmit={handleLogin}
