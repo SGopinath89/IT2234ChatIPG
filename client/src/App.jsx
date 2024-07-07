@@ -12,4 +12,4 @@ function App() {
   );
 }
 
-export default App; // This is crucial for default import
+export default App;

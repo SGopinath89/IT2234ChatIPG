@@ -52,8 +52,8 @@ const isLoggedIn = async (req, res, next) => {
         "Username"
       );
       if (session) {
-        req.user = session.userId; // Set the user data in the request object
-        next(); // Call the next middleware or route handler
+        req.user = session.userId;
+        next();
       } else {
         res.status(401).json("Invalid token");
       }
@@ -111,7 +111,7 @@ app.get("/profile", async (req, res) => {
       const session = await Session.findOne({ token }).populate(
         "userId",
         "Username"
-      ); // Populate the user data
+      );
       if (!session) {
         return res.status(401).json("Invalid token");
       }
@@ -131,7 +131,6 @@ app.get("/profile", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { Username, Password } = req.body;
 
-  // Input validation
   if (!Username || !Password) {
     return res.status(400).json({ error: "All fields are required." });
   }
@@ -152,7 +151,7 @@ app.post("/login", async (req, res) => {
         userId: user._id,
         token,
         expiresAt: new Date(Date.now() + 3600000),
-      }); // Session expires after 1 hour
+      });
       await session.save();
 
       res
