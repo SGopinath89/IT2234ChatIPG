@@ -148,7 +148,7 @@ export default function Chat() {
             <Contact
               key={userId}
               id={userId}
-              Username={onlinePeopleExclLoggedinUser[userId]} // Corrected here
+              Username={onlinePeopleExclLoggedinUser[userId]}
               onClick={() => setSelectedUserId(userId)}
               selected={userId === selectedUserId}
               online={true}
